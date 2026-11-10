@@ -1,2 +1,29 @@
 \section{Discussion}
-Interpret the topic and prediction findings in relation to the research question. Discuss missing revenue, selection, currency comparability, overview timing, and follow-up analyses motivated by the observed results.
+
+The topic model captures recurring narrative themes. Its largest topic mixes
+several settings and relationships, and the documentary topic includes
+formulaic wording. These features help characterize the corpus, even though
+the five topic weights make little difference to revenue prediction. Across
+the tested models, the full controls leave limited incremental predictive
+value for plot. Production company is particularly informative and may proxy
+for project scale, distribution, or other unavailable inputs. The ablation
+measures predictive contribution conditional on the model and the other
+controls. It cannot separate those mechanisms.
+
+The revenue analysis is conditional on recorded positive grosses, an
+English-original-language overview, and a listed company. The labeled films
+are a selected subset of the full corpus. Company coverage and label
+availability can change over time. The source lacks per-film currency,
+market scope, and receipt timing, so the CPI comparison addresses a
+specific nominal USD assumption. The snapshots also leave open when an
+overview or company record became available. The study is retrospective,
+and the intervals describe uncertainty on the observed release years.
+They do not account for shifts in future release cohorts or dependence
+among related films.
+
+A follow-up could compare the simple and full controls on exactly the same
+films to identify when the earlier embedding improvement disappears. Two
+further sensitivity checks would allow genre-specific release-year trends
+and add budget on the budget-observed subset. Better revenue provenance and
+dated pre-release metadata would make the forecasting interpretation more
+direct.

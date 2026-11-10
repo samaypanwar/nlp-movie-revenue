@@ -1,13 +1,70 @@
 \section{Methods}
-\subsection{Data and preprocessing}
-Each document is one movie's complete overview. We retain English-original-language films, remove empty and known placeholder overviews, collapse equivalent records, and exclude conflicting movie IDs. The resulting text corpus contains 32,105 films. The supervised cohort contains 6,348 films with a positive recorded revenue and a valid release date.
 
-Our primary response is log recorded revenue. The source CSV does not record the currency or geographic scope of each amount. As a sensitivity check, we apply U.S. annual CPI-U under a common nominal USD assumption, multiplying recorded amounts by the ratio of 2016 CPI-U to release-year CPI-U. Both analyses use the same films.
+\subsection{Data and response}
 
-\subsection{Unsupervised analysis}
-We factor the nonnegative TF--IDF matrix into five movie-topic and topic-word components. We tokenize alphabetic unigrams of at least two letters, remove English stop words, and retain terms appearing in at least two documents. The descriptive vocabulary has 30,054 terms. We summarize topics by their most heavily weighted terms and the number of films assigned to each dominant topic.
+A document is one movie's complete overview. Of the 45,466 source rows, we keep
+English-original-language films with valid movie IDs and usable overviews.
+We normalize whitespace, remove known placeholders, collapse equivalent
+records, and exclude conflicting movie IDs. This leaves 32,105 films for topic
+analysis. We treat zero budget, runtime, and revenue as missing. There are
+6,348 cleaned films with positive recorded revenue and a valid release date.
+The predictive comparison also requires a listed production company and
+release-year CPI coverage. Both revenue targets use the same films.
 
-\subsection{Supervised analysis and validation}
-We compare a training-median predictor and ridge regressions using plot text alone, release metadata alone, and the two together. The metadata include release year, release month, runtime, and genre. Plot representations include TF--IDF, five NMF weights, and a frozen sentence embedding. We fit vocabulary, topics, and metadata preprocessing within each training fold. We exclude training overviews that exactly match a later evaluation overview after whitespace and case normalization.
+The primary response is the natural log of recorded revenue. The source
+contains no per-film currency or geographic gross definition. In a sensitivity
+analysis, we assume comparable nominal USD and multiply recorded revenue by the
+ratio of 2016 CPI-U to release-year CPI-U before taking logs. Annual CPI-U is
+the mean of the twelve monthly observations from the BLS series obtained
+through FRED \cite{cpi}. Release year approximates the timing of receipts.
 
-We evaluate successive release windows from 2005 through 2016 using only earlier films for training. We report MAE and RMSE in log units, and pair errors on the same films to measure the incremental value of adding plot. We summarize those differences by release window and genre. Separate matched-cohort comparisons test production metadata, collection membership, and budget.
+\subsection{Text representations and topic analysis}
+
+We form a TF--IDF matrix from lowercase alphabetic unigrams of at least two
+letters. We remove English stop words and keep terms appearing in at least two
+documents. The descriptive corpus has 30,054 retained terms. TF--IDF preserves
+specific words that may distinguish movies within the same genre.
+
+Nonnegative matrix factorization (NMF) approximates the TF--IDF matrix as a
+product of movie--topic and topic--word matrices \cite{lee1999}. The five-topic
+specification keeps the topic table readable while allowing each overview to
+load on several themes. For descriptive assignments, we scale the movie
+weights by the corresponding topic-vector norms and use the largest weight.
+We select each representative film by cosine similarity to its dominant
+topic. We refit twice with perturbed initializations, match topics by cosine
+similarity, and compare their ten highest-weight words.
+
+The frozen \texttt{all-MiniLM-L6-v2} sentence encoder supplies a
+384-dimensional embedding \cite{minilm,reimers2019}.
+The model uses its own tokenizer on the intact overview. For overviews above
+its context limit, we encode token windows, pool their vectors by token count,
+and normalize. This representation tests whether contextual information adds
+signal beyond the lexical features and compressed topic weights.
+
+\subsection{Controls and chronological evaluation}
+
+The controls are release year and month, runtime, multi-label genre, collection
+membership as a franchise proxy, and multi-label production-company indicators.
+Year and runtime are standardized, missing runtime is imputed with the training
+median, and month is one-hot encoded. Each company observed on at least five
+training films gets its own indicator. Other companies share a rare-company
+indicator. We use ridge regression with a fixed penalty of 1 for all
+comparisons. We add each plot representation separately and omit one control
+block at a time in the controls-only model to measure its contribution given
+the remaining blocks.
+
+We evaluate releases in 2005--2008, 2009--2011, 2012--2013, and 2014--2016,
+using only earlier films for training. The windows contain 806, 678, 461, and
+715 films, respectively. The final window was inspected during model
+development. We fit TF--IDF, predictive NMF, and metadata transforms within
+each training fold. The descriptive NMF fit is separate. We exclude training
+overviews that exactly match a test overview after whitespace and case
+normalization.
+
+For film $i$, let $e_i^{(0)}$ and $e_i^{(1)}$ be the absolute log-revenue
+errors for the controls and comparison models. We report the paired mean
+$\Delta\mathrm{MAE} = n^{-1}\sum_i (e_i^{(1)}-e_i^{(0)})$.
+We form pointwise 95\% percentile intervals from 2,000 paired bootstrap
+resamples of films within release year. These intervals are conditional on
+the observed years and fitted models. We display genre and company-support
+slices with at least 30 films and interpret them descriptively.

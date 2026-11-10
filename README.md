@@ -44,4 +44,4 @@ Milestones 1 and 2 are implemented in the model notebook. Across 2,660 evaluatio
 
 `latex/main.tex` is the 12-point IMRaD entry point. Include the abstract, all team names, Andrew IDs and campuses on the first page, and a code appendix link. The limit is 10 pages excluding the code appendix and at most nine figures and tables combined. Deadline in the project brief is December 9, 2026 at 11:59 p.m. ET on Gradescope.
 
-From `latex/`, build an Overleaf ZIP with `zip -r ../overleaf-movie-revenue.zip main.tex sections references.bib`.
+From `latex/`, build an Overleaf ZIP with `zip -r ../overleaf-movie-revenue.zip main.tex sections references.bib figures`.

@@ -1,2 +1,16 @@
 \section{Introduction}
-Movie overviews summarize a film's premise in a short text. We study whether these summaries improve prediction of recorded box-office revenue beyond basic release metadata. We use the Movies Dataset distributed on Kaggle \cite{movies}. Add the financial motivation and summarize the final findings here.
+
+Box-office revenue varies substantially across films released in the same
+period. For a studio or investor comparing projects, a plot overview is a compact
+description of the product. It may convey characters, settings, or conflicts
+that are absent from a genre label. Production companies and franchises can
+also encode information about project scale or distribution. The practical
+question is whether the overview improves predictions once those other fields
+are available.
+
+We study this question using movie metadata distributed on Kaggle
+\cite{movies}. We first extract five topics to see what themes are recoverable
+from the overviews. We then compare three text representations on later releases,
+holding the metadata model and evaluation films fixed. The full metadata model
+is strongest without text in the pooled comparison. Production company has the
+largest incremental contribution among the control blocks we tested.

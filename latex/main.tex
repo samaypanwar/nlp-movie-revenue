@@ -1,18 +1,32 @@
 \documentclass[12pt]{article}
 \usepackage[margin=1in]{geometry}
-\usepackage{graphicx,booktabs}
+\usepackage[T1]{fontenc}
+\usepackage{amsmath,booktabs,graphicx}
 \usepackage[hidelinks]{hyperref}
+\graphicspath{{figures/}}
 
-\title{Can Movie Overviews Improve Box-Office Revenue Prediction?}
+\title{Does Plot Add Predictive Value for Movie Box-Office Revenue?}
 \author{Team member name, Andrew ID, campus \\
 Team member name, Andrew ID, campus \\
 Team member name, Andrew ID, campus}
-\date{}
+\date{46-924 Natural Language Processing}
 
 \begin{document}
 \maketitle
+
 \begin{abstract}
-Complete after evaluation. Summarize the question, data, methods, comparative results, and conclusion.
+We test whether movie overviews improve prediction of recorded box-office
+revenue beyond release timing, genre, runtime, franchise membership, and
+production company. We use nonnegative matrix factorization to describe five
+topics in 32,105 English-original-language overviews. For prediction, we compare
+three text representations in ridge regressions across four chronological
+evaluation windows covering 2,660 films. The metadata model has a pooled mean
+absolute error of 1.666 in log revenue units. Adding a frozen sentence embedding
+increases error by 0.025 (95\% paired interval 0.005 to 0.045), while removing
+production-company indicators increases it by 0.166 (0.127 to 0.204). TF--IDF
+increases error and topic weights make little difference. The overviews yield
+interpretable themes, but the tested text representations show little incremental
+predictive value given the available metadata.
 \end{abstract}
 
 \input{sections/introduction}
@@ -25,7 +39,9 @@ Complete after evaluation. Summarize the question, data, methods, comparative re
 
 \clearpage
 \appendix
-\section{Code}
-Project repository: \url{https://github.com/samaypanwar/nlp-movie-revenue}.
-Update this link to the submission revision before turning in the report.
+\section{Code and reproducibility}
+The \href{https://github.com/samaypanwar/nlp-movie-revenue/tree/e5ba6ae63a1e630a5ab811d29787b2787da08af1}{analysis revision on GitHub}
+contains the cleaner, source audit and exploratory notebook, model comparison
+notebook, locked core environment, and instructions for retrieving the inputs.
+The README documents input checksums and how to enable the frozen encoder.
 \end{document}

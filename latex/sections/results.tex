@@ -1,6 +1,116 @@
 \section{Results}
-\subsection{Narrative topics}
-Report topic sizes, representative terms, and ambiguous or redundant topics.
 
-\subsection{Revenue prediction}
-Report model performance on identical chronological splits. Summarize paired errors and examples where the representations behave differently.
+\subsection{Coverage and narrative topics}
+
+Genre coverage increases sharply in the later decades, while CPI-adjusted
+medians move differently across genres (Figure~\ref{fig:coverage}). Films can
+belong to multiple genres. The amount of labeled data is therefore sensitive
+to both release period and the choice of genre.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{genre_by_decade.png}
+  \caption{Labeled film counts and median CPI-adjusted revenue for the five most
+  common genres among pre-2014 labeled films. Medians require 30 films.
+  The 2010s are partially observed. The adjustment assumes comparable nominal USD.}
+  \label{fig:coverage}
+\end{figure}
+
+NMF recovers recognizable themes around family, romance, and war
+(Table~\ref{tab:topics}). The largest topic includes family and coming-of-age
+language and accounts for about 48\% of overviews. The film and documentary
+topic also captures formulaic descriptions, as illustrated by its representative
+film. All five topics retain the same ten highest-weight words in both
+perturbed fits. This checks local stability under the tested initializations.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Five descriptive NMF topics. Two overviews with no retained terms
+  are excluded from dominant-topic counts.}
+  \label{tab:topics}
+  \begin{tabular}{@{}rp{0.36\linewidth}p{0.39\linewidth}r@{}}
+    \toprule
+    Topic & Selected top words & Representative film & Films \\
+    \midrule
+    1 & family, life, town, school & \emph{Kathleen} & 15,432 \\
+    2 & film, documentary, story, movie & \emph{The Prodigal Son} & 4,741 \\
+    3 & young, woman, love, husband & \emph{Corridor of Mirrors} & 4,797 \\
+    4 & world, war, American, army & \emph{Five Came Back} & 4,551 \\
+    5 & New, York, city, comedy & \emph{If These Knishes Could Talk} & 2,582 \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+\subsection{Incremental prediction from plot}
+
+On 2,660 evaluation films, the full controls model has pooled log MAE of
+1.666. TF--IDF increases MAE by 0.093 and the frozen embedding increases it by
+0.025. NMF changes MAE by about 0.002 (Table~\ref{tab:plot}). In 2014--2016,
+embedding MAE rises from 1.678 to 1.684, with a paired interval that spans
+zero. Under the CPI sensitivity, the pooled embedding change is $+0.020$ and
+the final-window change rounds to zero.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Pooled incremental performance from adding plot to full controls.
+  Positive changes indicate higher error. Intervals are paired.}
+  \label{tab:plot}
+  \begin{tabular}{@{}lrrl@{}}
+    \toprule
+    Added representation & Log MAE & $\Delta$ MAE & 95\% interval \\
+    \midrule
+    TF--IDF & 1.759 & $+0.093$ & $[0.067, 0.119]$ \\
+    NMF weights & 1.668 & $+0.002$ & $[\approx 0, 0.004]$ \\
+    Frozen sentence embedding & 1.691 & $+0.025$ & $[0.005, 0.045]$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
+
+Figure~\ref{fig:paired} shows the embedding comparison by release window and
+major genre. The clearest increase in error by window occurs in 2009--2011
+($+0.061$, interval $[0.021, 0.101]$). In 2014--2016, drama and thriller show
+small improvements, but their intervals cross zero. The intervals also cross zero for both
+latest-window company-support groups. Genre-by-company intersections are
+thin. The largest contains 18 films in 2014--2016 and falls to 17 after splitting
+by collection membership.
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=\linewidth]{paired_plot_errors.png}
+  \caption{Paired change in log MAE after adding the frozen plot embedding.
+  Bars show pointwise 95\% intervals. Negative values favor adding plot.
+  Genre groups overlap.}
+  \label{fig:paired}
+\end{figure}
+
+The pooled result still allows material changes for individual films. In the
+final window, adding the embedding reduces absolute log error for
+\emph{The Martian} from 2.749 to 0.841 and increases it for \emph{The BFG}
+from 0.312 to 2.334. These examples show why a few successful predictions
+provide limited evidence of a systematic gain.
+
+\subsection{Contribution of control blocks}
+
+Removing production company increases pooled log MAE by 0.166, the largest
+of the control ablations (Table~\ref{tab:controls}). In 2014--2016 the
+corresponding increase is 0.232, with an interval of $[0.147, 0.318]$.
+The smaller pooled contributions of runtime, genre, release timing, and
+franchise membership are measured with all other controls present.
+
+\begin{table}[htbp]
+  \centering
+  \caption{Pooled changes in log MAE when one metadata block is omitted.
+  Positive changes favor retaining the block.}
+  \label{tab:controls}
+  \begin{tabular}{@{}lrl@{}}
+    \toprule
+    Omitted block & $\Delta$ MAE & 95\% interval \\
+    \midrule
+    Production company & $+0.166$ & $[0.127, 0.204]$ \\
+    Runtime & $+0.063$ & $[0.046, 0.080]$ \\
+    Genre & $+0.055$ & $[0.039, 0.069]$ \\
+    Release time & $+0.053$ & $[0.039, 0.067]$ \\
+    Franchise & $+0.030$ & $[0.016, 0.044]$ \\
+    \bottomrule
+  \end{tabular}
+\end{table}
