@@ -1,29 +1,38 @@
 # Movie overviews and box-office revenue
 
-Can plot overviews improve out-of-time prediction of recorded movie revenue beyond basic release metadata?
+Do plot overviews improve prediction on later movie releases beyond genre and basic release metadata?
 
-## Run the data work
+## Rebuild the data
 
-1. Obtain `movies_metadata.csv` from the [Kaggle dataset](https://www.kaggle.com/datasets/sibamsamanta07/movies-dataset-45k-films-with-budget-and-revenue). Place it in `~/datasets/nlp-movie-revenue/raw/`. The course snapshot has SHA-256 `37ec322786b136a24604564e55160be75f8937546f11cb1a990076971fa895fd`. Set `MOVIE_DATA_DIR` to use a different external directory.
-2. Run `poetry install` and use the Poetry interpreter for the notebooks. From this directory, `poetry run python -m ipykernel install --user --name nlp-movie-revenue` registers that interpreter with Jupyter.
-3. Open the notebooks in order with their working directory set to `notebooks/`. The cleaning notebook writes `derived/movie_corpus.csv` under the external data directory.
+From the repository root, run `poetry install` with Python 3.14. Put the Kaggle [movie metadata CSV](https://www.kaggle.com/datasets/sibamsamanta07/movies-dataset-45k-films-with-budget-and-revenue) in `~/datasets/nlp-movie-revenue/raw/movies_metadata.csv`. Set `MOVIE_DATA_DIR` to use a different external directory. Download the CPI snapshot once, then rebuild any time with the same inputs.
 
-The source audit checks schema, coercion failures, zero sentinels, duplicates and language coverage. Cleaning normalizes whitespace, removes known placeholders and resolves duplicate IDs. EDA checks cohort sizes, release-year and label coverage, text lengths, repeated overviews and revenue quantiles. Save local figures and metrics in `outputs/`.
+```sh
+data_dir="${MOVIE_DATA_DIR:-$HOME/datasets/nlp-movie-revenue}"
+mkdir -p "$data_dir/raw"
+curl -fL 'https://fred.stlouisfed.org/graph/fredgraph.csv?id=CPIAUCNS&cosd=1913-01-01&coed=2020-12-31' \
+  -o "$data_dir/raw/cpi_monthly.csv"
+poetry run python notebooks/corpus.py
+```
 
-## Initial audit
+The cleaner prints row counts and SHA-256 hashes. The project movie snapshot hashes to `37ec322786b136a24604564e55160be75f8937546f11cb1a990076971fa895fd` and the CPI snapshot to `3247f33f63146035709eb0e19474ec2eec33c849c975b00228b8c5aa1fd84d5d`. Use `--raw`, `--cpi`, and `--output` for explicit paths. The derived CSV is written to `derived/movie_corpus.csv` under the external data directory. Raw and derived data stay out of Git.
 
-The source snapshot has 45,466 rows and 24 columns. Cleaning leaves 32,105 overviews, including 6,348 with positive revenue and a parsed release date. The source has 38,052 zero-revenue entries. Positive budget is available for 75.5% of the supervised cohort. There are 29 rows with repeated normalized overviews in the text corpus and zero in the supervised cohort. The 2014–2016 releases offer 728 labeled films as a candidate holdout; the last labeled year, 2017, has only 86.
+The CSV has one English-original-language overview per movie ID. It drops empty and known placeholder text, collapses equivalent rows, excludes conflicting IDs, and marks unavailable financial values as missing. Genre, company IDs and country codes are JSON arrays. The CSV also includes release year and month, runtime, collection ID, and both recorded and CPI-adjusted amounts. Empty arrays indicate no entries listed. Collection IDs are for grouping and deriving a membership flag.
 
-## Modeling plan
+## Run the notebooks
 
-- Define one document as a single movie overview. Start with English-original-language films. Describe differences in labeled versus unlabeled movies. Verify currency, release-date semantics, and revenue coverage before interpreting error in dollars.
-- Fit descriptive TF-IDF NMF on the text corpus. Compare topic counts (start with 5, 8, and 12) using top-word overlap across seeds, topic redundancy, representative documents and reconstruction error. Report the post-filter vocabulary and interpret topics with example films. Treat HW2's eight topics as a starting point.
-- Predict log recorded positive revenue with ridge regression. Compare a training-median predictor, release metadata (year, month, runtime), metadata plus TF-IDF, and metadata plus NMF weights on identical rows and splits. Consider budget separately after checking coverage and provenance. Omit votes and popularity because their measurement timing is unknown.
-- Reserve recent years for final evaluation after inspecting label counts by year. Tune on expanding chronological folds. Fit imputation, scaling, vocabulary and NMF inside each fold. Inspect exact and near-duplicate overviews before freezing splits and remove training duplicates that match later evaluation rows. Report log MAE as primary, plus log RMSE and paired fold differences. Inspect where text helps and fails.
-- Treat the result as retrospective prediction for films with recorded revenue. A pre-release forecasting claim requires evidence that the text and metadata were available then. Consider CSSNMF only after the main comparison. Revenue alone cannot establish profitability.
+Use the Poetry interpreter and set the notebook working directory to `notebooks/`. Register the kernel with `poetry run python -m ipykernel install --user --name nlp-movie-revenue` if needed.
+
+1. **Corpus and EDA** (`01_corpus_and_eda.ipynb`) audits the raw data, calls the CLI's cleaning function, and explores release coverage, genre, and revenue. Figures are exported as 300 DPI PNGs under `outputs/`.
+2. **Model comparison** (`02_model_comparison.ipynb`) uses five descriptive NMF topics and runs fixed ridge models with plot-only and metadata-plus-plot features. It uses expanding chronological folds and reports 2014–2016 separately. Compare paired log MAE overall, by genre and by genre and evaluation window. Production, franchise and budget each have their own matched comparison.
+
+For the optional contextual representation, install with `poetry run python -m pip install 'sentence-transformers==5.2.3'`, then set `MOVIE_SENTENCE_EMBEDDINGS=1` in the kernel environment. The notebook pins the all-MiniLM-L6-v2 checkpoint revision and uses its tokenizer. The first run downloads the checkpoint.
+
+## Revenue and scope
+
+The raw file contains 45,466 rows. The current cleaner retains 32,105 overviews and 6,348 films with positive recorded revenue and valid dates. The CSV has no per-film currency, geographic revenue scope, or receipt timing. Report log recorded revenue as the primary target and the CPI-adjusted model as a sensitivity under a comparable nominal USD assumption. The adjustment multiplies by annual 2016 CPI-U divided by annual release-year CPI-U from [FRED CPIAUCNS](https://fred.stlouisfed.org/series/CPIAUCNS). It approximates receipt timing with release year. Treat the experiment as retrospective and conditional on the dataset's revenue coverage.
 
 ## Report
 
-`latex/main.tex` is the entry point. Use one 12-point IMRaD report with an abstract, team names, Andrew IDs and campuses on the first page, and a code appendix link. Keep the report within 10 pages excluding the code appendix, with at most nine figures and tables combined. Include data provenance, document and vocabulary counts, topic-count selection, leakage controls, comparative results, limitations and follow-up work. Deadline in the project brief is December 9, 2026 at 11:59 p.m. ET on Gradescope.
+`latex/main.tex` is the 12-point IMRaD entry point. Include the abstract, all team names, Andrew IDs and campuses on the first page, and a code appendix link. The limit is 10 pages excluding the code appendix and at most nine figures and tables combined. Deadline in the project brief is December 9, 2026 at 11:59 p.m. ET on Gradescope.
 
-From `latex/`, build the Overleaf source ZIP with `zip -r ../overleaf-movie-revenue.zip main.tex sections references.bib`. In Overleaf, choose New Project → Upload Project and select the ZIP.
+From `latex/`, build an Overleaf ZIP with `zip -r ../overleaf-movie-revenue.zip main.tex sections references.bib`.

@@ -1,9 +1,13 @@
 \section{Methods}
 \subsection{Data and preprocessing}
-A document is one movie's overview. Describe provenance, coverage, exclusions, missing revenue, and the difference between the text and supervised cohorts. Report document counts and the vocabulary size after preprocessing.
+Each document is one movie's complete overview. We retain English-original-language films, remove empty and known placeholder overviews, collapse equivalent records, and exclude conflicting movie IDs. The resulting text corpus contains 32,105 films. The supervised cohort contains 6,348 films with a positive recorded revenue and a valid release date.
+
+Our primary response is log recorded revenue. The source CSV does not record the currency or geographic scope of each amount. As a sensitivity check, we apply U.S. annual CPI-U under a common nominal USD assumption, multiplying recorded amounts by the ratio of 2016 CPI-U to release-year CPI-U. Both analyses use the same films.
 
 \subsection{Unsupervised analysis}
-Fit nonnegative matrix factorization to TF--IDF features. Document topic-count selection using stability, distinctiveness, representative overviews, and reconstruction error.
+We factor the nonnegative TF--IDF matrix into five movie-topic and topic-word components. We tokenize alphabetic unigrams of at least two letters, remove English stop words, and retain terms appearing in at least two documents. The descriptive vocabulary has 30,054 terms. We summarize topics by their most heavily weighted terms and the number of films assigned to each dominant topic.
 
 \subsection{Supervised analysis and validation}
-Compare a metadata-only baseline with models using TF--IDF or NMF topic weights. Document the final response transformation, release-year split boundaries, fold-local fitting, duplicate handling, and error metrics.
+We compare a training-median predictor and ridge regressions using plot text alone, release metadata alone, and the two together. The metadata include release year, release month, runtime, and genre. Plot representations include TF--IDF, five NMF weights, and a frozen sentence embedding. We fit vocabulary, topics, and metadata preprocessing within each training fold. We exclude training overviews that exactly match a later evaluation overview after whitespace and case normalization.
+
+We evaluate successive release windows from 2005 through 2016 using only earlier films for training. We report MAE and RMSE in log units, and pair errors on the same films to measure the incremental value of adding plot. We summarize those differences by release window and genre. Separate matched-cohort comparisons test production metadata, collection membership, and budget.
