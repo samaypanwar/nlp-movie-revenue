@@ -1,0 +1,15 @@
+.DS_Store
+.ipynb_checkpoints/
+__pycache__/
+.env
+*.csv
+*.parquet
+*.zip
+outputs/*
+!outputs/README.md
+*.aux
+*.log
+*.out
+*.fls
+*.fdb_latexmk
+latex/main.pdf

@@ -1,0 +1,18 @@
+[project]
+name = "nlp-coursework"
+version = "0.1.0"
+description = "Shared Python environment for NLP coursework."
+requires-python = ">=3.14,<3.15"
+dependencies = [
+    "pandas",
+    "matplotlib",
+    "nltk",
+    "wordcloud",
+    "scikit-learn",
+    "ipykernel",
+    "nbformat",
+    "nbclient",
+]
+
+[tool.poetry]
+package-mode = false
